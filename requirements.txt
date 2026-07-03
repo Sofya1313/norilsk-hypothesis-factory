@@ -1,0 +1,10 @@
+streamlit>=1.36
+pandas>=2.2
+openpyxl>=3.1
+pypdf>=4.2
+python-docx>=1.1
+scikit-learn>=1.5
+networkx>=3.3
+plotly>=5.22
+pytest>=8.2
+

@@ -1,47 +1,13 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environments
-venv/
-env/
+.pytest_cache/
 .venv/
+venv/
+exports/*.log
+exports/*.err.log
+data/hypothesis_factory.sqlite
+data/processed/
+01_Data/hypothesis_factory.sqlite
+01_Data/processed_runtime/
 .env
-
-# IDE settings
-.vscode/
-.idea/
-*.iml
-
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# Excel temporary files (особенно важно для вашего кейса!)
-~$*.xlsx
-*.xlsx~lock*
-
-# System files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Logs and databases
-*.log
-*.sqlite
-*.db
-
-# Environment variables
-.env
-.env.local
-
-# Uploaded files (если система сохраняет загрузки локально)
-uploads/
-temp/
-
-# Large files (чтобы случайно не залить их в GitHub)
-*.zip
-*.rar
-*.7z
-*.tar.gz
+.streamlit/secrets.toml
