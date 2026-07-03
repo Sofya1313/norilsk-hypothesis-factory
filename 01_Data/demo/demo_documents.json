@@ -1,0 +1,82 @@
+[
+  {
+    "id": "SRC-001",
+    "title": "КГМК: распределение потерь по хвостам",
+    "language": "ru",
+    "source_type": "tailings_xlsx_summary",
+    "text": "КГМК: в хвостах зафиксированы потери элемента 28 и элемента 29. Крупные и тонкие классы требуют разных проверок: классификация, доизмельчение и флотация.",
+    "claims": [
+      {
+        "subject": "КГМК element_28 -10",
+        "relation": "has_tailings_loss",
+        "object": "element_28 loss in tailings",
+        "direction": "affects",
+        "magnitude": "2983.8 т",
+        "condition": "Хвосты породные; class=-10",
+        "quote": "КГМК: в классе -10 зафиксированы высокие потери элемента 28."
+      },
+      {
+        "subject": "КГМК element_29 -10",
+        "relation": "has_tailings_loss",
+        "object": "element_29 loss in tailings",
+        "direction": "affects",
+        "magnitude": "1352.5 т",
+        "condition": "Хвосты породные; class=-10",
+        "quote": "КГМК: в классе -10 зафиксированы потери элемента 29."
+      }
+    ]
+  },
+  {
+    "id": "SRC-002",
+    "title": "НОФ Вкр: грубые классы и классификация",
+    "language": "ru",
+    "source_type": "tailings_xlsx_summary",
+    "text": "НОФ Вкр: значимая доля потерь элемента 28 и элемента 29 находится в грубых классах. Это указывает на проверку раскрытия, классификации и режима гидроциклонов.",
+    "claims": [
+      {
+        "subject": "НОФ Вкр element_28 +125",
+        "relation": "has_tailings_loss",
+        "object": "element_28 loss in tailings",
+        "direction": "affects",
+        "magnitude": "1471.3 т",
+        "condition": "Хвосты породные; class=+125",
+        "quote": "НОФ Вкр: максимум потерь элемента 28 находится в классе +125."
+      },
+      {
+        "subject": "НОФ Вкр element_29 +125",
+        "relation": "has_tailings_loss",
+        "object": "element_29 loss in tailings",
+        "direction": "affects",
+        "magnitude": "720.0 т",
+        "condition": "Хвосты породные; class=+125",
+        "quote": "НОФ Вкр: максимум потерь элемента 29 находится в классе +125."
+      }
+    ]
+  },
+  {
+    "id": "SRC-003",
+    "title": "ТОФ: неоднозначность приоритетов",
+    "language": "ru",
+    "source_type": "tailings_xlsx_summary",
+    "text": "ТОФ: агрегированный профиль хвостов показывает высокие потери в тонком классе, но отдельные блоки породных и пирротиновых хвостов могут требовать разных вмешательств.",
+    "claims": [
+      {
+        "subject": "ТОФ element_28 -10",
+        "relation": "has_tailings_loss",
+        "object": "priority intervention zone",
+        "direction": "increases",
+        "magnitude": "8516.7 т",
+        "condition": "Хвосты отвальные; class=-10",
+        "quote": "ТОФ: общий профиль показывает максимум потерь элемента 28 в классе -10."
+      },
+      {
+        "subject": "ТОФ element_28 -10",
+        "relation": "requires_validation",
+        "object": "priority intervention zone",
+        "direction": "no_effect",
+        "condition": "Отдельные блоки породных и пирротиновых хвостов",
+        "quote": "Для ТОФ общий блок может скрывать различия между породными и пирротиновыми хвостами."
+      }
+    ]
+  }
+]
