@@ -788,7 +788,7 @@ def review_export_tab(st, result: PipelineResult, weights: dict[str, float]) -> 
 
 def main() -> None:
     st = _load_streamlit()
-    st.set_page_config(page_title="Фабрика гипотез", layout="wide")
+    st.set_page_config(page_title="Фабрика гипотез", layout="wide", initial_sidebar_state="expanded")
     st.markdown(
         """
         <style>
