@@ -5,12 +5,19 @@ import sys
 
 import pandas as pd
 
-from hypothesis_factory.config import DEFAULT_CONSTRAINTS, DEFAULT_KPI, DEFAULT_WEIGHTS, PROCESSED_DIR
+from hypothesis_factory.config import DEFAULT_CONSTRAINTS, DEFAULT_KPI, PROCESSED_DIR
 from hypothesis_factory.export.export_json import hypotheses_to_csv, hypotheses_to_json
 from hypothesis_factory.export.report_docx import build_docx_report
 from hypothesis_factory.graph.graph_viz import graph_edges_table, graph_to_plotly_figure
 from hypothesis_factory.ingestion.parsers import parse_uploaded_file
 from hypothesis_factory.pipeline import PipelineResult, run_pipeline
+from hypothesis_factory.scoring.profiles import (
+    profile_description,
+    profile_label,
+    profile_options,
+    scoring_profile_weights,
+    scoring_weights,
+)
 from hypothesis_factory.scoring.scorer import rank_hypotheses
 
 
@@ -134,6 +141,22 @@ WEIGHT_LABELS = {
     "cost": "Штраф за стоимость",
 }
 
+EXPERT_WEIGHT_LABELS = {
+    "value": "Ожидаемый эффект на KPI",
+    "novelty": "Новизна гипотезы",
+    "feasibility": "Простота проверки/внедрения",
+    "evidence": "Сила доказательств",
+    "uncertainty": "Исследовательская перспективность",
+    "expert_alignment": "Экспертное доверие",
+    "risk": "Технический риск",
+    "cost": "Стоимость проверки",
+}
+
+
+def _weight_label(key: str) -> str:
+    return EXPERT_WEIGHT_LABELS.get(key, WEIGHT_LABELS.get(key, key))
+
+
 ZONE_LABELS = {
     "fine_particle_loss": "Потери в тонких классах",
     "coarse_locked_loss": "Потери в грубых классах",
@@ -243,11 +266,34 @@ def _apply_feedback_to_hypotheses(hypotheses, feedback: dict):
 
 
 def _weights_sidebar(st) -> dict[str, float]:
-    st.sidebar.header("Веса скоринга")
-    weights = {}
-    for key, default in DEFAULT_WEIGHTS.items():
-        weights[key] = st.sidebar.slider(WEIGHT_LABELS.get(key, key), 0.0, 2.0, float(default), 0.05)
-    return weights
+    st.sidebar.header("Приоритизация гипотез")
+    st.sidebar.caption("Выберите, что сейчас важнее для исследования")
+    st.sidebar.caption("Выберите профиль приоритизации. При необходимости эксперт может раскрыть ручные настройки и изменить веса скоринга.")
+
+    profile_key = st.sidebar.selectbox(
+        "Профиль приоритизации",
+        profile_options(),
+        format_func=profile_label,
+        key="scoring_profile",
+    )
+    st.sidebar.info(profile_description(profile_key))
+
+    profile_weights = scoring_profile_weights(profile_key)
+    expert_weights = {}
+    with st.sidebar.expander("⚙ Экспертные настройки весов", expanded=False):
+        use_expert_weights = st.checkbox("Переопределить профиль вручную", value=False, key="use_expert_scoring_weights")
+        st.caption("Ручные значения применяются сразу к ранжированию гипотез, когда включено переопределение профиля.")
+        for key, default in profile_weights.items():
+            expert_weights[key] = st.slider(
+                _weight_label(key),
+                0.0,
+                1.0,
+                float(default),
+                0.05,
+                key=f"expert_weight_{profile_key}_{key}",
+                disabled=not use_expert_weights,
+            )
+    return scoring_weights(profile_key, expert_weights if use_expert_weights else None)
 
 
 def _parse_uploads(st, enabled: bool) -> list:
@@ -279,14 +325,13 @@ def _run(st, kpi: str, constraints: str, uploaded_docs: list, weights: dict[str,
     return st.session_state.result
 
 
-def _draft_changed(st, kpi: str, constraints: str, uploaded_docs: list, weights: dict[str, float]) -> bool:
+def _draft_changed(st, kpi: str, constraints: str, uploaded_docs: list) -> bool:
     if "result" not in st.session_state:
         return False
     return (
         st.session_state.get("active_kpi") != kpi
         or st.session_state.get("active_constraints") != constraints
         or st.session_state.get("active_uploaded_titles", []) != [doc.title for doc in uploaded_docs]
-        or st.session_state.get("active_weights", {}) != weights
     )
 
 
@@ -305,7 +350,7 @@ def task_setup_tab(st, result: PipelineResult, weights: dict[str, float], kpi: s
     st.caption("Показаны параметры последнего запуска пайплайна.")
     st.text_area("Текущий целевой показатель", _polish_sentence(kpi), disabled=True)
     st.text_area("Ограничения", _polish_sentence(constraints), disabled=True)
-    st.dataframe(pd.DataFrame([{WEIGHT_LABELS.get(key, key): value for key, value in weights.items()}]), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame([{_weight_label(key): value for key, value in weights.items()}]), use_container_width=True, hide_index=True)
 
 
 def knowledge_base_tab(st, result: PipelineResult) -> None:
@@ -767,19 +812,20 @@ def main() -> None:
         enable_uploads = st.checkbox("Добавить свои файлы", value=False)
         uploaded_docs = _parse_uploads(st, enable_uploads)
         weights = _weights_sidebar(st)
-        run_button = st.button("Запустить обработку", type="primary", use_container_width=True)
-        st.caption("Изменения KPI, ограничений, файлов и весов применятся после запуска обработки.")
+        run_button = st.button("Пересобрать данные и гипотезы", type="primary", use_container_width=True)
+        st.caption("Нажимайте кнопку после изменения KPI, ограничений или файлов. Профиль весов применяется сразу и только пересортировывает текущие гипотезы.")
 
     if run_button or "result" not in st.session_state:
         result = _run(st, kpi, constraints, uploaded_docs, weights)
     else:
         result = st.session_state.result
+        st.session_state.active_weights = dict(weights)
 
     active_kpi = st.session_state.get("active_kpi", kpi)
     active_constraints = st.session_state.get("active_constraints", constraints)
     active_weights = st.session_state.get("active_weights", weights)
-    if _draft_changed(st, kpi, constraints, uploaded_docs, weights):
-        st.info("Параметры в боковой панели изменены, но результат еще не пересчитан. Нажмите «Запустить обработку», чтобы применить изменения.")
+    if _draft_changed(st, kpi, constraints, uploaded_docs):
+        st.info("Параметры постановки в боковой панели изменены. Нажмите «Пересобрать данные и гипотезы», чтобы обновить пайплайн; веса скоринга уже применяются к текущему ранжированию.")
 
     tabs = st.tabs(
         [
