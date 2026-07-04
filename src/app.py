@@ -840,98 +840,86 @@ def main() -> None:
             font-variant-numeric: tabular-nums;
         }
 
-        /* --- Aurora background (минимальная версия, без резких цветов и движений) --- */
-        [data-testid="stAppViewContainer"],
+        /* --- Aurora background (минимальная версия, без резких цветов и движений) ---
+           Фон задаётся как background-image прямо на контейнере приложения.
+           Никаких ::before/::after с position:fixed, никакого isolation:isolate —
+           именно они перехватывали контекст прокрутки и не давали листать страницу. */
         [data-testid="stHeader"] {
             background: transparent !important;
         }
         [data-testid="stApp"] {
-            background: #0b0d12 !important;
+            background-color: #0b0d12;
+            background-image:
+                radial-gradient(circle at 12% 12%, rgba(239, 68, 68, 0.18), transparent 40%),
+                radial-gradient(circle at 88% 12%, rgba(99, 102, 241, 0.16), transparent 42%),
+                radial-gradient(circle at 45% 95%, rgba(20, 184, 166, 0.12), transparent 45%);
+            background-repeat: no-repeat;
+            background-size: 160% 160%;
+            background-attachment: fixed;
+            animation: aurora-shift 40s ease-in-out infinite alternate;
         }
         [data-testid="stAppViewContainer"] {
-            position: relative;
-            isolation: isolate;
+            background: transparent !important;
         }
-        [data-testid="stAppViewContainer"]::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 0% 10%, rgba(239, 68, 68, 0.18) 0%, transparent 30%),
-                radial-gradient(circle at 100% 12%, rgba(99, 102, 241, 0.16) 0%, transparent 32%),
-                radial-gradient(circle at 40% 100%, rgba(20, 184, 166, 0.10) 0%, transparent 36%),
-                #0b0d12;
-        }
-        [data-testid="stAppViewContainer"]::after {
-            content: "";
-            position: fixed;
-            inset: -10%;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle, rgba(239, 68, 68, 0.18) 0%, transparent 58%) -10% -12% / 46vw 46vw no-repeat,
-                radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, transparent 58%) 112% 8% / 46vw 46vw no-repeat,
-                radial-gradient(circle, rgba(20, 184, 166, 0.10) 0%, transparent 60%) 24% 112% / 46vw 46vw no-repeat;
-            filter: blur(70px);
-            mix-blend-mode: screen;
-            opacity: 0.95;
-            animation: aurora-drift 34s ease-in-out infinite;
-        }
-        [data-testid="stMain"],
-        [data-testid="stSidebar"] {
-            position: relative;
-            z-index: 1;
-        }
-        .aurora-bg {
-            display: none !important;
-        }
-        .aurora-bg span {
-            position: absolute;
-            width: 46vw;
-            height: 46vw;
-            border-radius: 50%;
-            filter: blur(110px);
-            opacity: 0.16;
-            mix-blend-mode: screen;
-            animation: aurora-drift 34s ease-in-out infinite;
-        }
-        .aurora-bg span:nth-child(1) {
-            top: -12%;
-            left: -10%;
-            background: #ef4444;
-            animation-delay: 0s;
-        }
-        .aurora-bg span:nth-child(2) {
-            top: 8%;
-            right: -14%;
-            background: #6366f1;
-            animation-delay: -11s;
-        }
-        .aurora-bg span:nth-child(3) {
-            bottom: -16%;
-            left: 22%;
-            background: #14b8a6;
-            animation-delay: -22s;
-        }
-        @keyframes aurora-drift {
-            0%   { transform: translate(0, 0) scale(1); }
-            50%  { transform: translate(3%, 4%) scale(1.08); }
-            100% { transform: translate(0, 0) scale(1); }
+        @keyframes aurora-shift {
+            0%   { background-position: 0% 0%, 100% 0%, 45% 100%; }
+            100% { background-position: 10% 8%, 90% 16%, 52% 90%; }
         }
         @media (prefers-reduced-motion: reduce) {
-            .aurora-bg span,
-            [data-testid="stAppViewContainer"]::after {
+            [data-testid="stApp"] {
                 animation: none;
             }
         }
+
+        /* --- Читаемость текста на тёмном фоне --- */
+        /* Заголовок страницы и подпись */
+        [data-testid="stApp"] h1 {
+            color: #ffffff !important;
+        }
+        [data-testid="stCaptionContainer"],
+        [data-testid="stCaptionContainer"] * {
+            color: rgba(226, 232, 240, 0.85) !important;
+        }
+        /* Общий текст, заголовки, списки, markdown, подписи виджетов */
+        [data-testid="stApp"] h2,
+        [data-testid="stApp"] h3,
+        [data-testid="stApp"] h4,
+        [data-testid="stApp"] h5,
+        [data-testid="stApp"] h6,
+        [data-testid="stApp"] p,
+        [data-testid="stApp"] li,
+        [data-testid="stApp"] span,
+        [data-testid="stApp"] label,
+        [data-testid="stMarkdownContainer"],
+        [data-testid="stMarkdownContainer"] * ,
+        [data-testid="stWidgetLabel"],
+        [data-testid="stWidgetLabel"] * {
+            color: #e8edf5 !important;
+        }
+        /* Названия вкладок */
+        [data-testid="stTabs"] button[role="tab"] {
+            color: rgba(226, 232, 240, 0.72) !important;
+        }
+        [data-testid="stTabs"] button[role="tab"]:hover {
+            color: #ffffff !important;
+        }
+        [data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+            color: #ffffff !important;
+        }
+        [data-testid="stTabs"] button[role="tab"][aria-selected="true"] p {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+        /* Экспандеры (заголовки гипотез) */
+        [data-testid="stExpander"] summary,
+        [data-testid="stExpander"] summary * {
+            color: #eef2f8 !important;
+        }
+        /* Текст внутри таблиц/датафреймов */
+        [data-testid="stDataFrame"] * {
+            color: #e8edf5 !important;
+        }
         </style>
-        <div class="aurora-bg">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
         """,
         unsafe_allow_html=True,
     )
