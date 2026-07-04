@@ -134,6 +134,78 @@ WEIGHT_LABELS = {
     "cost": "Штраф за стоимость",
 }
 
+PRIORITY_PROFILES = {
+    "Сбалансированный": {
+        "description": "Равный фокус на ценности, реализуемости, неопределенности и рисках.",
+        "weights": DEFAULT_WEIGHTS,
+    },
+    "Максимальный эффект на KPI": {
+        "description": "Выше поднимает гипотезы с сильной связью с целевым показателем.",
+        "weights": {
+            "value": 2.0,
+            "novelty": 0.8,
+            "feasibility": 0.5,
+            "evidence": 0.8,
+            "uncertainty": 1.3,
+            "expert_alignment": 0.6,
+            "risk": 0.1,
+            "cost": 0.05,
+        },
+    },
+    "Минимальный риск": {
+        "description": "Выше поднимает проверенные и технологически осторожные гипотезы.",
+        "weights": {
+            "value": 0.9,
+            "novelty": 0.45,
+            "feasibility": 1.35,
+            "evidence": 1.25,
+            "uncertainty": 0.85,
+            "expert_alignment": 0.8,
+            "risk": 1.6,
+            "cost": 0.75,
+        },
+    },
+    "Быстрая проверка": {
+        "description": "Выше поднимает гипотезы, которые проще проверить малым экспериментом.",
+        "weights": {
+            "value": 0.95,
+            "novelty": 0.5,
+            "feasibility": 1.65,
+            "evidence": 1.0,
+            "uncertainty": 0.8,
+            "expert_alignment": 0.7,
+            "risk": 0.75,
+            "cost": 1.15,
+        },
+    },
+    "Минимальная стоимость": {
+        "description": "Выше поднимает гипотезы без дорогих изменений оборудования и схемы.",
+        "weights": {
+            "value": 0.85,
+            "novelty": 0.45,
+            "feasibility": 1.2,
+            "evidence": 0.9,
+            "uncertainty": 0.8,
+            "expert_alignment": 0.6,
+            "risk": 0.85,
+            "cost": 1.75,
+        },
+    },
+    "Максимальная новизна": {
+        "description": "Выше поднимает более исследовательские и менее очевидные гипотезы.",
+        "weights": {
+            "value": 0.8,
+            "novelty": 2.0,
+            "feasibility": 0.2,
+            "evidence": 0.65,
+            "uncertainty": 1.3,
+            "expert_alignment": 0.45,
+            "risk": 0.05,
+            "cost": 0.05,
+        },
+    },
+}
+
 ZONE_LABELS = {
     "fine_particle_loss": "Потери в тонких классах",
     "coarse_locked_loss": "Потери в грубых классах",
@@ -242,12 +314,37 @@ def _apply_feedback_to_hypotheses(hypotheses, feedback: dict):
     return hypotheses
 
 
-def _weights_sidebar(st) -> dict[str, float]:
-    st.sidebar.header("Веса скоринга")
+def _profile_weights(profile: str) -> dict[str, float]:
+    return {**DEFAULT_WEIGHTS, **PRIORITY_PROFILES[profile]["weights"]}
+
+
+def _weights_sidebar(st) -> tuple[str, dict[str, float]]:
+    st.sidebar.header("Приоритизация гипотез")
+    st.sidebar.caption("Выберите, что сейчас важнее для исследования.")
+    mode = st.sidebar.radio(
+        "Режим приоритизации",
+        ["Готовый профиль", "Ручная настройка"],
+        horizontal=False,
+    )
+    if mode == "Готовый профиль":
+        profile = st.sidebar.selectbox("Профиль приоритизации", list(PRIORITY_PROFILES.keys()))
+        st.sidebar.caption(PRIORITY_PROFILES[profile]["description"])
+        weights = _profile_weights(profile)
+        return profile, weights
+
+    profile = "Ручная настройка"
+    st.sidebar.caption("Настройте веса самостоятельно. Эти значения применятся после запуска обработки.")
     weights = {}
     for key, default in DEFAULT_WEIGHTS.items():
-        weights[key] = st.sidebar.slider(WEIGHT_LABELS.get(key, key), 0.0, 2.0, float(default), 0.05)
-    return weights
+        weights[key] = st.sidebar.slider(
+            WEIGHT_LABELS.get(key, key),
+            0.0,
+            2.0,
+            float(default),
+            0.05,
+            key=f"manual_weight_{key}",
+        )
+    return profile, weights
 
 
 def _parse_uploads(st, enabled: bool) -> list:
@@ -270,27 +367,50 @@ def _parse_uploads(st, enabled: bool) -> list:
     return docs
 
 
-def _run(st, kpi: str, constraints: str, uploaded_docs: list, weights: dict[str, float]) -> PipelineResult:
+def _run(
+    st,
+    kpi: str,
+    constraints: str,
+    uploaded_docs: list,
+    priority_profile: str,
+    weights: dict[str, float],
+) -> PipelineResult:
     st.session_state.result = run_pipeline(kpi, constraints, uploaded_docs or None)
     st.session_state.active_kpi = kpi
     st.session_state.active_constraints = constraints
     st.session_state.active_uploaded_titles = [doc.title for doc in uploaded_docs]
+    st.session_state.active_priority_profile = priority_profile
     st.session_state.active_weights = dict(weights)
     return st.session_state.result
 
 
-def _draft_changed(st, kpi: str, constraints: str, uploaded_docs: list, weights: dict[str, float]) -> bool:
+def _draft_changed(
+    st,
+    kpi: str,
+    constraints: str,
+    uploaded_docs: list,
+    priority_profile: str,
+    weights: dict[str, float],
+) -> bool:
     if "result" not in st.session_state:
         return False
     return (
         st.session_state.get("active_kpi") != kpi
         or st.session_state.get("active_constraints") != constraints
         or st.session_state.get("active_uploaded_titles", []) != [doc.title for doc in uploaded_docs]
+        or st.session_state.get("active_priority_profile") != priority_profile
         or st.session_state.get("active_weights", {}) != weights
     )
 
 
-def task_setup_tab(st, result: PipelineResult, weights: dict[str, float], kpi: str, constraints: str) -> None:
+def task_setup_tab(
+    st,
+    result: PipelineResult,
+    weights: dict[str, float],
+    kpi: str,
+    constraints: str,
+    priority_profile: str,
+) -> None:
     st.subheader("Постановка задачи")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Источники", len(result.documents))
@@ -305,6 +425,7 @@ def task_setup_tab(st, result: PipelineResult, weights: dict[str, float], kpi: s
     st.caption("Показаны параметры последнего запуска пайплайна.")
     st.text_area("Текущий целевой показатель", _polish_sentence(kpi), disabled=True)
     st.text_area("Ограничения", _polish_sentence(constraints), disabled=True)
+    st.text_input("Профиль приоритизации", priority_profile, disabled=True)
     st.dataframe(pd.DataFrame([{WEIGHT_LABELS.get(key, key): value for key, value in weights.items()}]), use_container_width=True, hide_index=True)
 
 
@@ -766,19 +887,20 @@ def main() -> None:
         constraints = _polish_sentence(st.text_area("Ограничения", _polish_sentence(DEFAULT_CONSTRAINTS), height=120, key="constraints_input_polished_v2"))
         enable_uploads = st.checkbox("Добавить свои файлы", value=False)
         uploaded_docs = _parse_uploads(st, enable_uploads)
-        weights = _weights_sidebar(st)
+        priority_profile, weights = _weights_sidebar(st)
         run_button = st.button("Запустить обработку", type="primary", use_container_width=True)
-        st.caption("Изменения KPI, ограничений, файлов и весов применятся после запуска обработки.")
+        st.caption("Изменения KPI, ограничений, файлов и профиля применятся после запуска обработки.")
 
     if run_button or "result" not in st.session_state:
-        result = _run(st, kpi, constraints, uploaded_docs, weights)
+        result = _run(st, kpi, constraints, uploaded_docs, priority_profile, weights)
     else:
         result = st.session_state.result
 
     active_kpi = st.session_state.get("active_kpi", kpi)
     active_constraints = st.session_state.get("active_constraints", constraints)
+    active_priority_profile = st.session_state.get("active_priority_profile", priority_profile)
     active_weights = st.session_state.get("active_weights", weights)
-    if _draft_changed(st, kpi, constraints, uploaded_docs, weights):
+    if _draft_changed(st, kpi, constraints, uploaded_docs, priority_profile, weights):
         st.info("Параметры в боковой панели изменены, но результат еще не пересчитан. Нажмите «Запустить обработку», чтобы применить изменения.")
 
     tabs = st.tabs(
@@ -797,7 +919,7 @@ def main() -> None:
         ]
     )
     with tabs[0]:
-        task_setup_tab(st, result, active_weights, active_kpi, active_constraints)
+        task_setup_tab(st, result, active_weights, active_kpi, active_constraints, active_priority_profile)
     with tabs[1]:
         tz_check_tab(st, result)
     with tabs[2]:
