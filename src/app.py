@@ -803,14 +803,41 @@ def main() -> None:
             max-width: 300px !important;
             width: 300px !important;
             transform: translateX(0) !important;
+            border-right: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 8px 0 24px rgba(2, 6, 23, 0.10);
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+        section[data-testid="stSidebar"]:hover {
+            border-right-color: rgba(239, 68, 68, 0.34);
+            box-shadow: 10px 0 28px rgba(2, 6, 23, 0.16);
         }
         section[data-testid="stSidebar"] > div[data-testid="stSidebarContent"] {
             width: 300px !important;
         }
         [data-testid="stSidebarCollapseButton"] {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
+            display: none !important;
+            visibility: hidden !important;
+        }
+        [data-testid="stMetric"] {
+            min-height: 82px;
+            padding: 12px 14px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 8px;
+            background: rgba(15, 18, 24, 0.36);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+            transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+        [data-testid="stMetric"]:hover {
+            border-color: rgba(239, 68, 68, 0.32);
+            background: rgba(15, 18, 24, 0.46);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 22px rgba(2, 6, 23, 0.12);
+        }
+        [data-testid="stMetricLabel"] {
+            color: rgba(226, 232, 240, 0.74);
+        }
+        [data-testid="stMetricValue"] {
+            color: #ffffff;
+            font-variant-numeric: tabular-nums;
         }
         </style>
         """,
