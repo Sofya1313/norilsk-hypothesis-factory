@@ -75,7 +75,7 @@ def _run_real_case_pipeline(kpi: str, constraints: str = "") -> PipelineResult:
     entities = extract_entities(documents, claims)
     coverage = build_tailings_coverage_matrix(data.observations)
     graph = build_knowledge_graph(claims)
-    zones = find_tailings_uncertainty_zones(data.observations, data.expert_hypotheses, kpi)
+    zones = find_tailings_uncertainty_zones(data.observations, data.expert_hypotheses, kpi, constraints)
     hypotheses = generate_hypotheses(zones, claims, kpi, constraints)
     save_chunks(chunks)
     save_claims(claims)

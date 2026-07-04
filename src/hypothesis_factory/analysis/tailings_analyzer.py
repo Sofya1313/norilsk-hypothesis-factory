@@ -31,6 +31,8 @@ def _context_preferences(kpi: str, constraints: str = "") -> dict[str, set[str]]
         process_focus.add("flotation")
     if any(term in text for term in ("классификац", "доизмельч", "гидроциклон", "раскрыт")):
         process_focus.add("classification")
+    if any(term in text for term in ("узл", "схем", "оборудован", "привяз", "вклад")):
+        process_focus.add("scheme_link")
     return {"elements": elements, "size": size_focus, "process": process_focus}
 
 
@@ -53,6 +55,8 @@ def _observation_context_boost(obs: TailingsObservation, zone_type: str, prefere
         boost += 0.1 if is_fine or zone_type == "missing_process_link" else -0.04
     if "classification" in process_focus:
         boost += 0.1 if is_coarse or zone_type == "missing_process_link" else -0.04
+    if "scheme_link" in process_focus:
+        boost += 0.42 if zone_type == "missing_process_link" else -0.2
     return boost
 
 
