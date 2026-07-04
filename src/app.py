@@ -845,13 +845,47 @@ def main() -> None:
         [data-testid="stHeader"] {
             background: transparent !important;
         }
-        .aurora-bg {
+        [data-testid="stApp"] {
+            background: #0b0d12 !important;
+        }
+        [data-testid="stAppViewContainer"] {
+            position: relative;
+            isolation: isolate;
+        }
+        [data-testid="stAppViewContainer"]::before {
+            content: "";
             position: fixed;
             inset: 0;
-            z-index: -1;
-            overflow: hidden;
+            z-index: 0;
             pointer-events: none;
-            background: #0b0d12;
+            background:
+                radial-gradient(circle at 0% 10%, rgba(239, 68, 68, 0.18) 0%, transparent 30%),
+                radial-gradient(circle at 100% 12%, rgba(99, 102, 241, 0.16) 0%, transparent 32%),
+                radial-gradient(circle at 40% 100%, rgba(20, 184, 166, 0.10) 0%, transparent 36%),
+                #0b0d12;
+        }
+        [data-testid="stAppViewContainer"]::after {
+            content: "";
+            position: fixed;
+            inset: -10%;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle, rgba(239, 68, 68, 0.18) 0%, transparent 58%) -10% -12% / 46vw 46vw no-repeat,
+                radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, transparent 58%) 112% 8% / 46vw 46vw no-repeat,
+                radial-gradient(circle, rgba(20, 184, 166, 0.10) 0%, transparent 60%) 24% 112% / 46vw 46vw no-repeat;
+            filter: blur(70px);
+            mix-blend-mode: screen;
+            opacity: 0.95;
+            animation: aurora-drift 34s ease-in-out infinite;
+        }
+        [data-testid="stMain"],
+        [data-testid="stSidebar"] {
+            position: relative;
+            z-index: 1;
+        }
+        .aurora-bg {
+            display: none !important;
         }
         .aurora-bg span {
             position: absolute;
@@ -887,7 +921,8 @@ def main() -> None:
             100% { transform: translate(0, 0) scale(1); }
         }
         @media (prefers-reduced-motion: reduce) {
-            .aurora-bg span {
+            .aurora-bg span,
+            [data-testid="stAppViewContainer"]::after {
                 animation: none;
             }
         }
