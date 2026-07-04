@@ -839,7 +839,64 @@ def main() -> None:
             color: #ffffff;
             font-variant-numeric: tabular-nums;
         }
+
+        /* --- Aurora background (минимальная версия, без резких цветов и движений) --- */
+        [data-testid="stAppViewContainer"],
+        [data-testid="stHeader"] {
+            background: transparent !important;
+        }
+        .aurora-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+            background: #0b0d12;
+        }
+        .aurora-bg span {
+            position: absolute;
+            width: 46vw;
+            height: 46vw;
+            border-radius: 50%;
+            filter: blur(110px);
+            opacity: 0.16;
+            mix-blend-mode: screen;
+            animation: aurora-drift 34s ease-in-out infinite;
+        }
+        .aurora-bg span:nth-child(1) {
+            top: -12%;
+            left: -10%;
+            background: #ef4444;
+            animation-delay: 0s;
+        }
+        .aurora-bg span:nth-child(2) {
+            top: 8%;
+            right: -14%;
+            background: #6366f1;
+            animation-delay: -11s;
+        }
+        .aurora-bg span:nth-child(3) {
+            bottom: -16%;
+            left: 22%;
+            background: #14b8a6;
+            animation-delay: -22s;
+        }
+        @keyframes aurora-drift {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(3%, 4%) scale(1.08); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .aurora-bg span {
+                animation: none;
+            }
+        }
         </style>
+        <div class="aurora-bg">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         """,
         unsafe_allow_html=True,
     )
