@@ -1,0 +1,9 @@
+.git
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+exports
+01_Data/processed_runtime
+01_Data/hypothesis_factory.sqlite

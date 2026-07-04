@@ -26,6 +26,30 @@ streamlit run src/app.py
 http://localhost:8501
 ```
 
+Если при запуске появляется `FileNotFoundError` для файла из `01_Data/processed`, проверьте, что в репозитории есть два подготовленных файла:
+
+```text
+01_Data/processed/nornickel_real_case_data_summary.json
+01_Data/processed/nornickel_real_case_knowledge_base.md
+```
+
+Без них приложение запускается, но не может построить реальный кейс.
+
+## Запуск через Docker
+
+Docker не обязателен для работы проекта, но его можно использовать для воспроизводимого запуска:
+
+```bash
+docker build -t hypothesis-factory .
+docker run --rm -p 8501:8501 hypothesis-factory
+```
+
+После запуска открыть:
+
+```text
+http://localhost:8501
+```
+
 ## Проверка
 
 ```bash
@@ -48,4 +72,3 @@ python -m pytest -q
 - Читаемый граф знаний.
 - Экспертная обратная связь.
 - Экспорт JSON, CSV и DOCX.
-
