@@ -1,0 +1,6 @@
+id,factory,element,particle_size_class,process_stage,equipment,target_metric,effect_value,unit,risk_level,source_id
+EXP-001,КГМК,element_28,-10,флотация,флотомашина,tailings_loss,-5,percent,2,SRC-001
+EXP-002,КГМК,element_29,-10,флотация,reagent_regime,tailings_loss,-4,percent,3,SRC-001
+EXP-003,НОФ Вкр,element_28,+125,классификация,гидроциклон,tailings_loss,-6,percent,3,SRC-002
+EXP-004,НОФ Вкр,element_29,+125,измельчение,мельница,tailings_loss,-3,percent,4,SRC-002
+EXP-005,ТОФ,element_28,-10,флотация,water_addition,tailings_loss,,percent,,SRC-003
