@@ -798,6 +798,20 @@ def main() -> None:
         #MainMenu, footer {
             visibility: hidden !important;
         }
+        section[data-testid="stSidebar"] {
+            min-width: 300px !important;
+            max-width: 300px !important;
+            width: 300px !important;
+            transform: translateX(0) !important;
+        }
+        section[data-testid="stSidebar"] > div[data-testid="stSidebarContent"] {
+            width: 300px !important;
+        }
+        [data-testid="stSidebarCollapseButton"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
